@@ -7,14 +7,15 @@ def exportFile(filename, data):
   with open(filename, 'wt') as csvfile:
     csvfile.write(data)
  
- limitv = 0.9 #Maximum voltage limit (in volts)
- limiti = 0.001 #Maximum current limit (in amperes)
- v = '' #Will hold the voltage readings
- i = '' #Will hold the current readings
- pulses = 100 #Number of pulses per train
- loops = 10 #Number of pulse trains
- delay = 0.02 #Delay before measuring voltage (in seconds)
- milliamps = 0.308  #Current level of the pulses (in milliamps)
+limitv = 0.9 #Maximum voltage limit (in volts)
+limiti = 0.001 #Maximum current limit (in amperes)
+v = '' #Will hold the voltage readings
+i = '' #Will hold the current readings
+pulses = 100 #Number of pulses per train
+loops = 10 #Number of pulse trains
+delay = 0.02 #Delay before measuring voltage (in seconds)
+milliamps = 0.308  #Current level of the pulses (in milliamps)
+nplc = 0.005  #Number of power cycles for integration
 
 #Open communication ports
 rm = visa.ResourceManages('@py')
@@ -26,12 +27,14 @@ instr.write("smua.source.func = smua.OUTPUT_DCAMPS") #SMU A will act as a curren
 instr.write("smua.source.limitv = " + str(limitv)+ "")
 instr.write("smua.nvbuffer1.appendmode = 1")  #New readings are appended to the existing data
 instr.write("smua.measure.delay = " + str(delay) + "")
+instr.write("smua.measure.nplc = " + str(nplc) + "")
 
 #Initialise SMU B
 instr.write("smub.reset()")
 instr.write("smub.source.func = smua.OUTPUT_DCVOLTS")  #SMU B will act as ampmeter, but it is important to initialise it as a voltage source, so the impedance is low
 instr.write("smub.source.limiti = " + str(limiti)+ "")
 instr.write("smub.nvbuffer1.appendmode = 1")  #New readings are appended to the existing data
+instr.write("smub.measure.nplc = " + str(nplc) + "")
 
 #Turn both sources on
 instr.write("smua.source.output = smua.OUTPUT_ON")
