@@ -58,7 +58,7 @@ instr.write("smua.trigger.count = 1")
 instr.write("smua.trigger.arm.count = 1")
 
 instr.write("smua.source.trigger.listi({" + str(milliamps) + "e-6})")
-inst.write("trigger.timer[1].delay = " + str(width) + "")
+instr.write("trigger.timer[1].delay = " + str(width) + "")
 
 
 #Turn both sources on
