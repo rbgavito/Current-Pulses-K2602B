@@ -11,7 +11,59 @@ def openCommPort(IP):
   #Open communication ports
   rm = visa.ResourceManages('@py')
   instr = rm.open_resource('TCPIP::' + IP + '::INSTR')
- 
+
+def initSMU(smu, src, rng, lim):
+  """
+  initSMU(smu, src, rng, lim)
+  smu: "smua" or smub"
+  src: 0 - volts, 1 - amps
+  rng: source range
+  lim: measure limit
+  """
+  instr.write(smu + ".reset()")
+  instr.write(smu + ".source.func = " + smu + "." + sourceFunctions[src]) #SMU A will act as a current source and voltmeter
+  instr.write(smu + ".nvbuffer1.appendmode = 1")  #New readings are appended to the existing data
+  instr.write(smu + ".measure.nplc = " + str(nplc) + "")
+  instr.write(smu + ".measure.autozero = smua.AUTOZERO_ONCE")
+  
+def setLimit(smu, src, lim):
+  if sourceFunctions[src] == 'OUTPUT_DCVOLTS':
+    func = 'i'
+  elif sourceFunctions[src] == 'OUTPUT_DCAMPS':
+    func = 'v'
+  instr.write(smu + ".source.limit" + func + " = " + str(lim))
+
+def setRange(smu, src, rng):
+  if sourceFunctions[src] == 'OUTPUT_DCVOLTS':
+    func = 'v'
+  elif sourceFunctions[src] == 'OUTPUT_DCAMPS':
+    func = 'i'
+  instr.write(smu + ".source.range" + func + " = " + str(rng))
+  
+def configPulse(smu, curr, wdt):
+  instr.write(smu + ".trigger.source.action = " + smu + ".ENABLE")
+  instr.write(smu + ".trigger.measure.action = " + smu + ".ENABLE")
+  instr.write(smu + ".trigger.measure.v(" + smu + ".nvbuffer1)")
+
+  instr.write("trigger.timer[1].count = 1")
+  instr.write("trigger.timer[1].passthrough = false")
+  instr.write("trigger.timer[1].stimulus = " + smu + ".trigger.ARMED_EVENT_ID")
+  instr.write(smu + ".trigger.source.stimulus = 0")
+  instr.write(smu + ".trigger.measure.stimulus = trigger.timer[1].EVENT_ID")
+  instr.write(smu + ".trigger.endpulse.stimulus = trigger.timer[1].EVENT_ID")
+  instr.write(smu + ".trigger.endpulse.action = " + smu + ".SOURCE_IDLE")
+  instr.write(smu + ".trigger.count = 1")
+  instr.write(smu + ".trigger.arm.count = 1")
+
+  instr.write(smu + ".source.trigger.listi({" + str(curr) + "e-6})")
+  instr.write("trigger.timer[1].delay = " + str(wdt) + "")
+
+###########
+  
+sourceFunctions = {
+  0: 'OUTPUT_DCVOLTS',
+  1: 'OUTPUT_DCAMPS',
+}
 limitv = 0.9 #Maximum voltage limit (in volts)
 limiti = 0.001 #Maximum current limit (in amperes)
 v = '' #Will hold the voltage readings
@@ -24,42 +76,14 @@ nplc = 0.005  #Number of power cycles for integration
 
 openCommPort('169.254.0.1')
 
+###########
 
-#Initialise SMU A
-instr.write("smua.reset()")
-instr.write("smua.source.func = smua.OUTPUT_DCAMPS") #SMU A will act as a current source and voltmeter
-instr.write("smua.source.limitv = " + str(limitv)+ "")
-instr.write("smua.nvbuffer1.appendmode = 1")  #New readings are appended to the existing data
-instr.write("smua.measure.nplc = " + str(nplc) + "")
-instr.write("smua.measure.autozero = smua.AUTOZERO_ONCE")
-instr.write("smua.source.rangei = 1e-3")
-
-#Initialise SMU B
-instr.write("smub.reset()")
-instr.write("smub.source.func = smua.OUTPUT_DCVOLTS")  #SMU B will act as ampmeter, but it is important to initialise it as a voltage source, so the impedance is low
-instr.write("smub.source.limiti = " + str(limiti)+ "")
-instr.write("smub.nvbuffer1.appendmode = 1")  #New readings are appended to the existing data
-instr.write("smub.measure.nplc = " + str(nplc) + "")
-instr.write("smub.measure.autozero = smub.AUTOZERO_ONCE")
+#Initialise SMUs
+initSMU('smua', 1, 0.001, limitv)
+initSMU('smub', 0, 0.001, limiti) #Check the range here
 
 #Configure pulse
-instr.write("smua.trigger.source.action = smua.ENABLE")
-instr.write("smua.trigger.measure.action = smua.ENABLE")
-instr.write("smua.trigger.measure.v(smua.nvbuffer1)")
-
-instr.write("trigger.timer[1].count = 1")
-instr.write("trigger.timer[1].passthrough = false")
-instr.write("trigger.timer[1].stimulus = smua.trigger.ARMED_EVENT_ID")
-instr.write("smua.trigger.source.stimulus = 0")
-instr.write("smua.trigger.measure.stimulus = trigger.timer[1].EVENT_ID")
-instr.write("smua.trigger.endpulse.stimulus = trigger.timer[1].EVENT_ID")
-instr.write("smua.trigger.endpulse.action = smua.SOURCE_IDLE")
-instr.write("smua.trigger.count = 1")
-instr.write("smua.trigger.arm.count = 1")
-
-instr.write("smua.source.trigger.listi({" + str(milliamps) + "e-6})")
-inst.write("trigger.timer[1].delay = " + str(width) + "")
-
+configPulse('smua',milliamps,width)
 
 #Turn both sources on
 instr.write("smua.source.output = smua.OUTPUT_ON")
