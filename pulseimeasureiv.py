@@ -45,6 +45,7 @@ instr.write("smub.measure.autozero = smub.AUTOZERO_ONCE")
 #Configure pulse
 instr.write("smua.trigger.source.action = smua.ENABLE")
 instr.write("smua.trigger.measure.action = smua.ENABLE")
+instr.write("smub.trigger.measure.action = smub.ENABLE")
 instr.write("smua.trigger.measure.v(smua.nvbuffer1)")
 
 instr.write("trigger.timer[1].count = 1")
@@ -52,10 +53,13 @@ instr.write("trigger.timer[1].passthrough = false")
 instr.write("trigger.timer[1].stimulus = smua.trigger.ARMED_EVENT_ID")
 instr.write("smua.trigger.source.stimulus = 0")
 instr.write("smua.trigger.measure.stimulus = trigger.timer[1].EVENT_ID")
+instr.write("smub.trigger.measure.stimulus = trigger.timer[1].EVENT_ID")
 instr.write("smua.trigger.endpulse.stimulus = trigger.timer[1].EVENT_ID")
 instr.write("smua.trigger.endpulse.action = smua.SOURCE_IDLE")
 instr.write("smua.trigger.count = 1")
 instr.write("smua.trigger.arm.count = 1")
+instr.write("smub.trigger.count = 1")
+instr.write("smub.trigger.arm.count = 1")
 
 instr.write("smua.source.trigger.listi({" + str(milliamps) + "e-6})")
 instr.write("trigger.timer[1].delay = " + str(width) + "")
@@ -72,7 +76,7 @@ for l in range(0, loops):
   instr.write("waitcomplete()") #Wait for the buffers to be cleared. Not sure if necessary
   
   #For loop creating the pulse train at a fixed current. Horribly long.
-  instr.write("for a = 1,100 do smua.trigger.initiate() smub.measure.i(smub.nvbuffer1) waitcomplete() end"))
+  instr.write("for a = 1,100 do smub.trigger.initiate() smua.trigger.initiate() waitcomplete() end"))
   instr.write("waitcomplete()") #Again, not sure if necessary 
   
   v = v + instr.query("x = printbuffer(1,smua.nvbuffer1.n,smua.nvbuffer1.readings)")
