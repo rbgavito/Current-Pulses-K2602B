@@ -47,6 +47,7 @@ instr.write("smua.trigger.source.action = smua.ENABLE")
 instr.write("smua.trigger.measure.action = smua.ENABLE")
 instr.write("smub.trigger.measure.action = smub.ENABLE")
 instr.write("smua.trigger.measure.v(smua.nvbuffer1)")
+instr.write("smub.trigger.measure.i(smub.nvbuffer1)")
 
 instr.write("trigger.timer[1].count = 1")
 instr.write("trigger.timer[1].passthrough = false")
