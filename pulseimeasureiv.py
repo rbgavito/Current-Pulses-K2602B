@@ -57,6 +57,13 @@ def configPulse(smu, curr, wdt):
 
   instr.write(smu + ".source.trigger.listi({" + str(curr) + "e-6})")
   instr.write("trigger.timer[1].delay = " + str(wdt) + "")
+  
+ def configMeasure(smu):
+  instr.write(smu + ".trigger.measure.action = " + smu + ".ENABLE")
+  instr.write(smu + ".trigger.measure.i(" + smu + ".nvbuffer1)")
+  instr.write(smu + ".trigger.measure.stimulus = trigger.timer[1].EVENT_ID")
+  instr.write(smu + ".trigger.count = 1")
+  instr.write(smu + ".trigger.arm.count = 1")
 
 ###########
   
@@ -96,7 +103,7 @@ for l in range(0, loops):
   instr.write("waitcomplete()") #Wait for the buffers to be cleared. Not sure if necessary
   
   #For loop creating the pulse train at a fixed current. Horribly long.
-  instr.write("for a = 1,100 do smua.trigger.initiate() smub.measure.i(smub.nvbuffer1) waitcomplete() end"))
+  instr.write("for a = 1,100 do smub.trigger.initiate() smua.trigger.initiate() waitcomplete() end"))
   instr.write("waitcomplete()") #Again, not sure if necessary 
   
   v = v + instr.query("x = printbuffer(1,smua.nvbuffer1.n,smua.nvbuffer1.readings)")
