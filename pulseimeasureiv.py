@@ -89,8 +89,9 @@ openCommPort('169.254.0.1')
 initSMU('smua', 1, 0.001, limitv)
 initSMU('smub', 0, 0.001, limiti) #Check the range here
 
-#Configure pulse
+#Configure pulse and measurement
 configPulse('smua',milliamps,width)
+configMeasure('smub')
 
 #Turn both sources on
 instr.write("smua.source.output = smua.OUTPUT_ON")
